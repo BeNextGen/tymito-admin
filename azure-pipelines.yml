@@ -1,0 +1,76 @@
+# Gradle
+# Build your Java project and run tests with Gradle using a Gradle wrapper script.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+- main
+- develop
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: docker_repository
+  - name: isDevelopBranch
+    value: $[ startsWith(variables['Build.SourceBranch'], 'refs/heads/develop') ]
+  - name: isMainBranch
+    value: $[ startsWith(variables['Build.SourceBranch'], 'refs/heads/main') ]
+  - name: shouldDeployImage
+    value: $[ in('True', variables['isDevelopBranch'], variables['isMainBranch']) ]
+
+jobs:
+- job: Test
+  timeoutInMinutes: 120 # how long to run the job before automatically cancelling
+  cancelTimeoutInMinutes: 2 # how much time to give 'run always even if cancelled tasks' before stopping them
+
+  steps:
+  - task: Gradle@2
+    inputs:
+      workingDirectory: ''
+      gradleWrapperFile: 'gradlew'
+      gradleOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '11'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: false
+      tasks: 'dockerLogin'
+    displayName: "docker login"
+
+  - task: Gradle@2
+    condition: eq(variables['isDevelopBranch'], 'true')
+    inputs:
+      workingDirectory: ''
+      gradleWrapperFile: 'gradlew'
+      gradleOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '11'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: false
+      tasks: 'dockerTagDev dockerPushDev'
+    displayName: "dockerTagDev dockerPushDev"
+
+  - task: Gradle@2
+    condition: eq(variables['isReleaseBranch'], 'true')
+    inputs:
+      workingDirectory: ''
+      gradleWrapperFile: 'gradlew'
+      gradleOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '11'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: false
+      tasks: 'dockerTagRelease dockerPushRelease dockerPush'
+    displayName: "dockerTagRelease dockerPushRelease dockerPush"
+
+  - task: Gradle@2
+    inputs:
+      workingDirectory: ''
+      gradleWrapperFile: 'gradlew'
+      gradleOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '11'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: false
+      tasks: 'dockerTagBranch dockerPushBranch'
+    displayName: "dockerTagBranch dockerPushBranch"
