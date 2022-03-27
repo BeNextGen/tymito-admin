@@ -25,6 +25,12 @@ jobs:
   cancelTimeoutInMinutes: 2 # how much time to give 'run always even if cancelled tasks' before stopping them
 
   steps:
+  - task: Bash@3
+    displayName: create .env file
+    inputs:
+      targetType: 'inline'
+      script: 'envsubst < app/.env.template > app/.env'
+
   - task: Gradle@2
     inputs:
       workingDirectory: ''
