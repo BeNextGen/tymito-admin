@@ -37,6 +37,7 @@ docker {
     tag("staging", imageName.plus("staging"))
     tag("dev", imageName.plus("dev"))
     tag("branch", imageName.plus(project.getExternalProperty("BUILD_SOURCEBRANCHNAME", "N0_BRANCH").toString()))
+    noCache(true)
 }
 
 task<org.gradle.api.tasks.Exec>("dockerLogin") {
@@ -47,27 +48,3 @@ task<org.gradle.api.tasks.Exec>("dockerLogin") {
     commandLine("docker", "login", "--username", login, "--password-stdin", repository)
     standardInput = password.byteInputStream(Charsets.UTF_8)
 }
-
-//tasks.register<Copy>("copyAppDependencies") {
-    //from(File(project.projectDir,"/app"))
-    //exclude("**/app/build/**")
-    //into(layout.buildDirectory.dir("docker"))
-//}
-
-//tasks.register<Copy>("copyAppDependencies2") {
-   // from(File(project.projectDir,"nginx.conf"))
-    //into(layout.buildDirectory.dir("docker"))
-//}
-
-//tasks.named("dockerPrepare") {
-    //dependsOn(":copyAppDependencies")
-    //dependsOn(":copyAppDependencies2")
-//}
-
-//tasks.named("copyAppDependencies") {
-    //dependsOn(":dockerClean")
-//}
-
-//tasks.named("copyAppDependencies2") {
-    //dependsOn(":dockerClean")
-//}
